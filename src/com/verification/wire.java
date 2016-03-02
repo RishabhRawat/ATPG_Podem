@@ -13,8 +13,9 @@ public final class wire {
         D_bar
     }
 
-    protected int cc0,cc1;
-    private Integer inputgate_id, outputgate_id;
+    protected int cc0 = -1;
+    protected int cc1 = -1;
+    protected Integer inputgate_id, outputgate_id;
     protected Integer wire_id;
     public wire(Integer id){
         wire_id = id;
