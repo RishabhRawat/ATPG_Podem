@@ -1,16 +1,15 @@
 package com.verification.components;
 
 import com.verification.ConfictedImplicationException;
+import com.verification.global;
 import com.verification.wire;
 
 import java.util.ArrayList;
 
-/**
- * Created by risha on 02-03-2016.
- */
 public abstract class component {
     public int inputs, outputs;
     public Integer [] input_wires, output_wires;
+    public Integer hashID;
 
     /**
      * Propogates controllability
@@ -31,11 +30,15 @@ public abstract class component {
     public abstract ArrayList<wire> imply() throws ConfictedImplicationException;
 
     //Returns true if xpath exists
-    public boolean x_path_check(){
+    public Integer x_path_check(){
+        if(this.getClass().getSimpleName().equals("PI"))
+            return hashID;
         ArrayList<wire> outs = imply();
         for (wire out:outs) {
-            if()
+            if(out.assignment == global.FvLogic.X){
+                ((component)global.all_components.get(out.outputgate_id)).x_path_check();
+            }
         }
-        return false
+        return false;
     }
 }
