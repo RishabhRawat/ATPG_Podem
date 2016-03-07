@@ -1,4 +1,6 @@
-package com.verification;
+package com.verification.components;
+
+import com.verification.global;
 
 import java.util.HashMap;
 
