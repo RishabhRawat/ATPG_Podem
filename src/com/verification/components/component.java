@@ -27,18 +27,32 @@ public abstract class component {
      * @return a arraylist of wires which were implied
      * @throws ConfictedImplicationException
      */
-    public abstract ArrayList<wire> imply() throws ConfictedImplicationException;
+    protected abstract ArrayList<wire> imply() throws ConfictedImplicationException;
 
     //Returns true if xpath exists
     public Integer x_path_check(){
-        if(this.getClass().getSimpleName().equals("PI"))
+        if(this.getClass().getSimpleName().equals("PO"))
             return hashID;
-        ArrayList<wire> outs = imply();
-        for (wire out:outs) {
-            if(out.assignment == global.FvLogic.X){
-                ((component)global.all_components.get(out.outputgate_id)).x_path_check();
+        try {
+            ArrayList<wire> outs = check_and_imply();
+            for (wire out:outs) {
+                if(out.assignment == global.FvLogic.X){
+                    global.all_components.get(out.outputgate_id).x_path_check();
+                }
             }
         }
-        return false;
+        catch (ConfictedImplicationException e){
+            System.out.println("CONFLICT!!!");
+            return -1;
+        }
+        return -1;
+    }
+
+    public ArrayList<wire> check_and_imply() throws ConfictedImplicationException {
+        for (int i = 0; i <inputs ; i++) {
+            if(!global.all_nets.get(input_wires[i]).assignment_node.isActive())
+                global.all_nets.get(input_wires[i]).assignment = global.FvLogic.X;
+        }
+        return imply();
     }
 }

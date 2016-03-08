@@ -8,7 +8,7 @@ public class BnBNode {
     global.FvLogic assignedValue;
     boolean flag = false;
     boolean active = true;
-    BnBNode(PI input, global.FvLogic inputValue){
+    public BnBNode(PI input, global.FvLogic inputValue){
         assignedInput = input;
         assignedValue = inputValue;
     }

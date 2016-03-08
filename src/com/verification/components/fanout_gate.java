@@ -7,18 +7,21 @@ import com.verification.wire;
 import java.util.ArrayList;
 
 public class fanout_gate extends component {
-    public fanout_gate(int out){
+    public fanout_gate(Integer myID, ArrayList<Integer> inputIDs, ArrayList<Integer> outputIDs){
+        hashID = myID;
         inputs = 1;
-        outputs = out;
+        outputs = outputIDs.size();
         input_wires = new Integer[1];
-        output_wires = new Integer[out];
+        output_wires = new Integer[outputs];
+        input_wires = inputIDs.toArray(input_wires);
+        output_wires = outputIDs.toArray(output_wires);
     }
     @Override
     public void propogate_controllability() {
-        wire input = (wire) global.all_components.get(input_wires[0]);
+        wire input = global.all_nets.get(input_wires[0]);
 
         for (Integer output:output_wires) {
-            wire outputwire = (wire) global.all_components.get(output);
+            wire outputwire = global.all_nets.get(output);
             outputwire.cc0 = input.cc0;
             outputwire.cc1 = input.cc1;
         }
@@ -28,11 +31,11 @@ public class fanout_gate extends component {
      * @inheritDoc
      */
     @Override
-    public ArrayList<wire> imply() throws ConfictedImplicationException {
+    protected ArrayList<wire> imply() throws ConfictedImplicationException {
         ArrayList<wire> temp = new ArrayList<>();
-        wire inputwire = ((wire)global.all_components.get(output_wires[input_wires[0]]));
+        wire inputwire = global.all_nets.get(output_wires[input_wires[0]]);
         for (Integer wireID:output_wires) {
-            wire outputwire = ((wire)global.all_components.get(output_wires[wireID]));
+            wire outputwire = global.all_nets.get(output_wires[wireID]);
             if(outputwire.assignment == global.FvLogic.X || inputwire.assignment == outputwire.assignment){
                 outputwire.assignment = inputwire.assignment;
                 temp.add(outputwire);
