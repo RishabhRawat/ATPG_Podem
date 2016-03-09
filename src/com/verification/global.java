@@ -1,6 +1,7 @@
 package com.verification;
 
 import com.verification.BranchnBound.BnBNode;
+import com.verification.BranchnBound.BnBStack;
 import com.verification.components.*;
 import jdk.nashorn.api.scripting.ScriptObjectMirror;
 
@@ -14,7 +15,8 @@ import java.util.Map;
 
 public final class global {
     public static int cc_complete_count = 0;
-    public static int total_input, total_output;
+    public static int total_input = 0, total_output = 0;
+    public static BnBNode rootNode;
 
     /**
      * 5 valued logic, lookup Roth D-valued Logic
@@ -106,66 +108,127 @@ public final class global {
 
     public static HashMap<Integer, wire> all_nets = new HashMap<>();
     public static HashMap<Integer, component> all_components = new HashMap<>();
+    static HashMap<wire,String> Allsa0faults = new HashMap<>();
+    static HashMap<wire,String> Allsa1faults = new HashMap<>();
 
-    public boolean check_controllability_completion() {
+    private static boolean check_controllability_completion() {
         return (cc_complete_count > 0) && (cc_complete_count == total_output);
     }
 
-    wire highWire = new wire(0);
-    wire lowWire = new wire(0);
-
-    public global() {
-        BnBNode rootNode = new BnBNode(null, null);
-        highWire.assignment = FvLogic.high;
-        lowWire.assignment = FvLogic.low;
-        highWire.assignment_node = rootNode;
-        lowWire.assignment_node = rootNode;
-        all_nets.put(0, lowWire);
-        all_nets.put(1, highWire);
+    //D is for sa0 fault,
+    static wire getNextFault(){
+        for(wire aFaultSite: Allsa0faults.keySet()) {
+            if(Allsa0faults.get(aFaultSite)=="") {
+                aFaultSite.assignment= global.FvLogic.D;
+                return aFaultSite;
+            }
+        }
+        for(wire aFaultSite: Allsa1faults.keySet()) {
+            if(Allsa0faults.get(aFaultSite)==""){
+                aFaultSite.assignment = global.FvLogic.D_bar;
+                return aFaultSite;
+            }
+        }
+        return null;
     }
 
-    public static void init(String content) throws ScriptException, NoSuchMethodException {
-        ScriptEngine engine = new ScriptEngineManager().getEngineByName("nashorn");
-        ScriptObjectMirror mirror = (ScriptObjectMirror) engine.eval("load('src/com/verification/parse.js')");
-        Invocable invocable = (Invocable) engine;
-        Object result = invocable.invokeFunction("create_schema", content);
-        ((Map) engine.eval("all_nets")).forEach((key, value) -> {
-            wire newWire = new wire(Integer.parseInt((String) key));
-            global.all_nets.put(Integer.parseInt((String) key), newWire);
-        });
 
-        ((Map) engine.eval("all_components")).forEach((key, value) -> {
-            try {
-                ArrayList<Integer> in = new ArrayList<>(((Map) (((Map) value).get("inputs"))).values());
-                ArrayList<Integer> out = new ArrayList<>(((Map) (((Map) value).get("outputs"))).values());
-                component gate;
-                switch ((((Map) value).get("type")).toString()) {
-                    case "PI":
-                        gate = new PI(Integer.parseInt((String) key), in, out);
+    public static final wire highWire = new wire(0);
+    public static final wire lowWire = new wire(0);
 
-                        break;
-                    case "PO":
-                        gate = new PO(Integer.parseInt((String) key), in, out);
-                        break;
-                    case "and_gate":
-                        gate = new and_gate(Integer.parseInt((String) key), in, out);
-                        break;
-                    case "or_gate":
-                        gate = new or_gate(Integer.parseInt((String) key), in, out);
-                        break;
-                    case "not_gate":
-                        gate = new not_gate(Integer.parseInt((String) key), in, out);
-                        break;
-                    case "fanout_gate":
-                        gate = new fanout_gate(Integer.parseInt((String) key), in, out);
-                        break;
-                    default:
-                        throw new InvalidOperationException();
+    public static void execute(String content) throws ScriptException, NoSuchMethodException {
+
+        //Initialising rail wires.. Powering up circuit :P
+        {
+            rootNode = new BnBNode(null, null);
+            highWire.assignment = FvLogic.high;
+            lowWire.assignment = FvLogic.low;
+            highWire.assignment_node = rootNode;
+            lowWire.assignment_node = rootNode;
+            all_nets.put(0, lowWire);
+            all_nets.put(1, highWire);
+        }
+
+        //Parsing the circuit
+        {
+            ScriptEngine engine = new ScriptEngineManager().getEngineByName("nashorn");
+            ScriptObjectMirror mirror = (ScriptObjectMirror) engine.eval("load('src/com/verification/parse.js')");
+            Invocable invocable = (Invocable) engine;
+            Object result = invocable.invokeFunction("create_schema", content);
+            ((Map) engine.eval("all_nets")).forEach((key, value) -> {
+                wire newWire = new wire(((Number)value).intValue());
+                global.all_nets.put(((Number)value).intValue(), newWire);
+            });
+
+            ((Map) engine.eval("all_components")).forEach((key, value) -> {
+                try {
+                    ArrayList<Number> in_temp = new ArrayList<>(((Map) (((Map) value).get("inputs"))).values());
+                    ArrayList<Number> out_temp = new ArrayList<>(((Map) (((Map) value).get("outputs"))).values());
+                    ArrayList<Integer> in = new ArrayList<>();
+                    ArrayList<Integer> out = new ArrayList<>();
+
+                    in_temp.forEach((number) -> {
+                        in.add(new Integer(number.intValue()));
+                        all_nets.get(new Integer(number.intValue())).outputgate_id = new Integer((String) key);
+                    });
+                    out_temp.forEach((number) -> {
+                        out.add(new Integer(number.intValue()));
+                        all_nets.get(new Integer(number.intValue())).inputgate_id = new Integer((String) key);
+                    });
+
+                    component gate;
+                    switch ((((Map) value).get("type")).toString()) {
+                        case "PI":
+                            gate = new PI(Integer.parseInt((String) key), in, out);
+                            break;
+                        case "PO":
+                            gate = new PO(Integer.parseInt((String) key), in, out);
+                            break;
+                        case "and_gate":
+                            gate = new and_gate(Integer.parseInt((String) key), in, out);
+                            break;
+                        case "or_gate":
+                            gate = new or_gate(Integer.parseInt((String) key), in, out);
+                            break;
+                        case "not_gate":
+                            gate = new not_gate(Integer.parseInt((String) key), in, out);
+                            break;
+                        case "fanout_gate":
+                            gate = new fanout_gate(Integer.parseInt((String) key), in, out);
+                            break;
+                        default:
+                            throw new InvalidOperationException();
+                    }
+                    all_components.put(Integer.parseInt((String) key), gate);
+                } catch (InvalidOperationException e) {
+                    e.printStackTrace();
                 }
-                all_components.put(Integer.parseInt((String) key), gate);
-            } catch (InvalidOperationException e) {
-                e.printStackTrace();
+            });
+        }
+
+        //Setting up controllability
+        all_components.forEach((id,component) -> {
+            if(component instanceof PI){
+                component.check_and_propogate_controllability();
             }
         });
+        if(!check_controllability_completion())
+            throw new RuntimeException();
+
+        //Initialising fault list
+        all_nets.forEach((key,value)->{
+            if(key != 1 && key!= 0){
+                Allsa0faults.put(value,"");
+                Allsa1faults.put(value,"");
+            }
+        });
+
+
+        //Algorithm start
+        wire faultSite = getNextFault();
+        while(faultSite != null){
+            BnBStack podemStack = new BnBStack(faultSite);
+            podemStack.execute();
+        }
     }
 }

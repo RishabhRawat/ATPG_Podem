@@ -1,6 +1,6 @@
 package com.verification.components;
 
-import com.verification.ConfictedImplicationException;
+import com.verification.BranchnBound.BnBNode;
 import com.verification.InvalidOperationException;
 import com.verification.global;
 import com.verification.wire;
@@ -8,6 +8,9 @@ import com.verification.wire;
 import java.util.ArrayList;
 
 public class PI extends component {
+    public global.FvLogic assignment = global.FvLogic.X;
+    public BnBNode assignment_node;
+
     public PI(Integer myID, ArrayList<Integer> inputIDs, ArrayList<Integer> outputIDs) throws InvalidOperationException {
         hashID = myID;
         inputs = 0;
@@ -15,7 +18,8 @@ public class PI extends component {
         input_wires = null;
         output_wires = new Integer[1];
         output_wires = outputIDs.toArray(output_wires);
-        if(inputIDs != null)
+        global.total_input++;
+        if(inputIDs.size()!=0)
             throw new InvalidOperationException();
     }
 
@@ -23,16 +27,15 @@ public class PI extends component {
      * @inheritDoc
      */
     @Override
-    public void propogate_controllability() {
+    protected void propogate_controllability() {
         wire outputwire = global.all_nets.get(output_wires[0]);
         outputwire.cc0 = 1;
         outputwire.cc1 = 1;
-        global.all_components.get(outputwire.outputgate_id).propogate_controllability();
+        global.all_components.get(outputwire.outputgate_id).check_and_propogate_controllability();
     }
 
-
     @Override
-    protected ArrayList<wire> imply() throws ConfictedImplicationException {
-            throw new ConfictedImplicationException();
+    public global.FvLogic calculate() {
+        return assignment;
     }
 }

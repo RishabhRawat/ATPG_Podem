@@ -1,6 +1,5 @@
 package com.verification.components;
 
-import com.verification.ConfictedImplicationException;
 import com.verification.global;
 import com.verification.wire;
 
@@ -17,13 +16,14 @@ public class fanout_gate extends component {
         output_wires = outputIDs.toArray(output_wires);
     }
     @Override
-    public void propogate_controllability() {
+    protected void propogate_controllability() {
         wire input = global.all_nets.get(input_wires[0]);
 
         for (Integer output:output_wires) {
             wire outputwire = global.all_nets.get(output);
             outputwire.cc0 = input.cc0;
             outputwire.cc1 = input.cc1;
+            global.all_components.get(outputwire.outputgate_id).check_and_propogate_controllability();
         }
     }
 
@@ -31,18 +31,7 @@ public class fanout_gate extends component {
      * @inheritDoc
      */
     @Override
-    protected ArrayList<wire> imply() throws ConfictedImplicationException {
-        ArrayList<wire> temp = new ArrayList<>();
-        wire inputwire = global.all_nets.get(output_wires[input_wires[0]]);
-        for (Integer wireID:output_wires) {
-            wire outputwire = global.all_nets.get(output_wires[wireID]);
-            if(outputwire.assignment == global.FvLogic.X || inputwire.assignment == outputwire.assignment){
-                outputwire.assignment = inputwire.assignment;
-                temp.add(outputwire);
-            }
-            else
-                throw new ConfictedImplicationException();
-        }
-        return temp;
+    public global.FvLogic calculate() {
+        return (global.all_nets.get(output_wires[input_wires[0]])).assignment;
     }
 }

@@ -1,14 +1,16 @@
 package com.verification.components;
 
-import com.verification.ConfictedImplicationException;
+import com.verification.BranchnBound.BnBNode;
 import com.verification.global;
 import com.verification.wire;
 
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 
 public abstract class component {
     public int inputs, outputs;
-    public Integer [] input_wires, output_wires;
+    public Integer[] input_wires, output_wires;
     public Integer hashID;
 
     /**
@@ -16,43 +18,92 @@ public abstract class component {
      * calculates output based on current assigned values on input nets
      * no output, the value is set to the wires
      */
-    public abstract void propogate_controllability();
+    protected abstract void propogate_controllability();
+
     protected boolean d_frontier = false;
 
 
     //Implies the output with current input wires and returns the list of implied outputs
 
+
     /**
      * Implies the current input net values to output nets
+     *
+     * @param newestNode
      * @return a arraylist of wires which were implied
-     * @throws ConfictedImplicationException
      */
-    protected abstract ArrayList<wire> imply() throws ConfictedImplicationException;
-
-    //Returns true if xpath exists
-    public Integer x_path_check(){
-        if(this.getClass().getSimpleName().equals("PO"))
-            return hashID;
-        try {
-            ArrayList<wire> outs = check_and_imply();
-            for (wire out:outs) {
-                if(out.assignment == global.FvLogic.X){
-                    global.all_components.get(out.outputgate_id).x_path_check();
-                }
+    private boolean imply(BnBNode newestNode) {
+        global.FvLogic output_value = calculate();
+        for (Integer i : output_wires) {
+            wire output_wire = global.all_nets.get(i);
+            if (output_wire.assignment != output_value && output_wire.assignment_node.isActive()) {
+                return false;
+            } else if (output_wire.assignment != output_value) {
+                output_wire.assignment_node = newestNode;
+                output_wire.assignment = output_value;
             }
         }
-        catch (ConfictedImplicationException e){
-            System.out.println("CONFLICT!!!");
-            return -1;
+        return true;
+    }
+
+    /**
+     * Implies the current input net values to output nets
+     *
+     * @return a arraylist of wires which were implied
+     */
+    private boolean imply(BnBNode newestNode, component myComponent) {
+        if (this == myComponent)
+            return false;
+        return imply(newestNode);
+
+    }
+
+    public abstract global.FvLogic calculate();
+
+    //Returns true if xpath exists
+    public Integer x_path_check() {
+        if (this.getClass().getSimpleName().equals("PO"))
+            return hashID;
+        for (Integer outID : output_wires) {
+            wire out = global.all_nets.get(outID);
+            if (out.assignment == global.FvLogic.X) {
+                global.all_components.get(out.outputgate_id).x_path_check();
+            }
         }
+
         return -1;
     }
 
-    public ArrayList<wire> check_and_imply() throws ConfictedImplicationException {
-        for (int i = 0; i <inputs ; i++) {
-            if(!global.all_nets.get(input_wires[i]).assignment_node.isActive())
-                global.all_nets.get(input_wires[i]).assignment = global.FvLogic.X;
+    public boolean check_and_imply() {
+        ArrayList<BnBNode> inputNodes = new ArrayList<>();
+
+        for (Integer i : input_wires) {
+            if (!global.all_nets.get(i).assignment_node.isActive()) {
+                global.all_nets.get(i).assignment = global.FvLogic.X;
+                global.all_nets.get(i).assignment_node = global.rootNode;
+            }
+            inputNodes.add(global.all_nets.get(i).assignment_node);
         }
-        return imply();
+
+        Comparator<BnBNode> cmp = new Comparator<BnBNode>() {
+            @Override
+            public int compare(BnBNode o1, BnBNode o2) {
+                return (o1.nodeNumber - o2.nodeNumber);
+            }
+        };
+
+        return imply(Collections.max(inputNodes, cmp));
     }
+
+    public void check_and_propogate_controllability() {
+        if (input_wires != null) {
+            for (Integer i : input_wires) {
+                if (global.all_nets.get(i).cc0 == -1 || global.all_nets.get(i).cc1 == -1) {
+                    return;
+                }
+            }
+        }
+        propogate_controllability();
+    }
+
 }

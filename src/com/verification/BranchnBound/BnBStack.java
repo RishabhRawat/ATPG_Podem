@@ -2,6 +2,7 @@ package com.verification.BranchnBound;
 
 import com.verification.components.PI;
 import com.verification.global;
+import com.verification.wire;
 
 import java.util.Stack;
 
@@ -15,13 +16,15 @@ public class BnBStack extends Stack<BnBNode> {
      * @param inputValue the value being assigned
      * @return the inserted node
      */
-    public BnBNode insertNode(PI input, global.FvLogic inputValue){
+    private wire faultSite = null;
+
+    private BnBNode insertNode(PI input, global.FvLogic inputValue){
         BnBNode node = new BnBNode(input,inputValue);
         push(node);
         return node;
     }
 
-    public void swap(){
+    private void swap(){
         BnBNode topNode = peek();
         if(topNode.flag){
             topNode.active = false;
@@ -35,4 +38,11 @@ public class BnBStack extends Stack<BnBNode> {
         }
     }
 
+    public BnBStack(wire faultSite) {
+        this.faultSite = faultSite;
+    }
+
+    public void execute() {
+
+    }
 }

@@ -78,12 +78,12 @@ function create_schema(inputFile) {
     for (var k in double_nets) {
         if(double_nets[k] > 1){
             var temp = l;
-            var c = {type: 'fanout_gate', inputs: [k], outputs: []};
+            var c = {type: 'fanout_gate', inputs: [parseInt(k,10)], outputs: []};
             for(var comp in all_components){
                 var index = all_components[comp].inputs.indexOf(parseInt(k));
                 if (index != -1) {
                     all_components[comp].inputs[index] = l;
-                    all_nets.push(l);
+                    all_nets.push(l|0);
                     l++;
                 }
             }

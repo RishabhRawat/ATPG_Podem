@@ -1,9 +1,7 @@
 package com.verification.components;
 
-import com.verification.ConfictedImplicationException;
 import com.verification.InvalidOperationException;
 import com.verification.global;
-import com.verification.wire;
 
 import java.util.ArrayList;
 
@@ -16,7 +14,8 @@ public class PO extends component {
         output_wires = null;
         output_wires = new Integer[1];
         input_wires = inputIDs.toArray(output_wires);
-        if(outputIDs != null)
+        global.total_output++;
+        if(outputIDs.size()!=0)
             throw new InvalidOperationException();
     }
 
@@ -24,7 +23,7 @@ public class PO extends component {
      * @inheritDoc
      */
     @Override
-    public void propogate_controllability() {
+    protected void propogate_controllability() {
         global.cc_complete_count++;
     }
 
@@ -32,8 +31,7 @@ public class PO extends component {
      * @inheritDoc
      */
     @Override
-    protected ArrayList<wire> imply() throws ConfictedImplicationException {
-        //TODO: worry about what happens here
+    public global.FvLogic calculate() {
         return null;
     }
 }
