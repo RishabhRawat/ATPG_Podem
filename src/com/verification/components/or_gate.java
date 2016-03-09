@@ -9,9 +9,7 @@ import static com.verification.global.FvLogic.or;
 
 public class or_gate extends component{
     public or_gate(Integer myID, ArrayList<Integer> inputIDs, ArrayList<Integer> outputIDs){
-        hashID = myID;
-        inputs = 2;
-        outputs = 1;
+        super(myID,2,1,global.FvLogic.low,global.FvLogic.high,false);
         input_wires = new Integer[2];
         output_wires = new Integer[1];
         input_wires = inputIDs.toArray(input_wires);

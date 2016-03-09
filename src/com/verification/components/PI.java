@@ -12,9 +12,7 @@ public class PI extends component {
     public BnBNode assignment_node;
 
     public PI(Integer myID, ArrayList<Integer> inputIDs, ArrayList<Integer> outputIDs) throws InvalidOperationException {
-        hashID = myID;
-        inputs = 0;
-        outputs = 1;
+        super(myID,0,1,global.FvLogic.high,global.FvLogic.high,false);
         input_wires = null;
         output_wires = new Integer[1];
         output_wires = outputIDs.toArray(output_wires);

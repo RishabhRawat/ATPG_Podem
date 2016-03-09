@@ -10,9 +10,7 @@ import static com.verification.global.FvLogic.not;
 
 public class not_gate extends component{
     public not_gate(Integer myID, ArrayList<Integer> inputIDs, ArrayList<Integer> outputIDs){
-        hashID = myID;
-        inputs = 1;
-        outputs = 1;
+        super(myID,1,1,global.FvLogic.high,global.FvLogic.high,true);
         input_wires = new Integer[1];
         output_wires = new Integer[1];
         input_wires = inputIDs.toArray(input_wires);

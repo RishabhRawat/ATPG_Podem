@@ -12,6 +12,17 @@ public abstract class component {
     public int inputs, outputs;
     public Integer[] input_wires, output_wires;
     public Integer hashID;
+    public final global.FvLogic hardValue, easyValue;
+    public final boolean inverting;
+
+    protected component(Integer hashID, int inputs, int outputs, global.FvLogic hardValue, global.FvLogic easyValue, boolean inverting ){
+        this.hashID = hashID;
+        this.inputs = inputs;
+        this.outputs = outputs;
+        this.hardValue = hardValue;
+        this.easyValue = easyValue;
+        this.inverting = inverting;
+    }
 
     /**
      * Propogates controllability
@@ -62,12 +73,17 @@ public abstract class component {
 
     //Returns true if xpath exists
     public Integer x_path_check() {
-        if (this.getClass().getSimpleName().equals("PO"))
+        if (this.getClass().getSimpleName().equals("PO")) {
+            calculate();
             return hashID;
+        }
         for (Integer outID : output_wires) {
             wire out = global.all_nets.get(outID);
-            if (out.assignment == global.FvLogic.X) {
-                global.all_components.get(out.outputgate_id).x_path_check();
+            if (out.assignment == global.FvLogic.X || out.assignment == global.FvLogic.D  || out.assignment == global.FvLogic.D_bar) {
+                Integer id = global.all_components.get(out.outputgate_id).x_path_check();
+                if(id != -1)
+                    return id;
+
             }
         }
 
