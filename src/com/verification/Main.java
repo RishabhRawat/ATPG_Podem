@@ -8,7 +8,7 @@ import java.util.Scanner;
 public class Main {
 
 
-    public static void main(String[] args) throws FileNotFoundException, ScriptException, NoSuchMethodException {
+    public static void main(String[] args) throws FileNotFoundException, ScriptException, NoSuchMethodException,InvalidOperationException {
         //TODO: change this to generic
         String content = new Scanner(new File("C:\\Users\\risha\\Desktop\\yosys-win32-mxebin-0.6\\yosys-win32-mxebin-0.6\\output.json")).useDelimiter("\\Z").next();
         new global();

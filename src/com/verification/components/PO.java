@@ -10,7 +10,7 @@ public class PO extends component {
     public global.FvLogic assignment = global.FvLogic.X;
     public BnBNode assignment_node;
     public PO(Integer myID, ArrayList<Integer> inputIDs, ArrayList<Integer> outputIDs) throws InvalidOperationException {
-        super(myID,1,0,global.FvLogic.high,global.FvLogic.high,false);
+        super(myID,1,0,global.FvLogic.high,global.FvLogic.high,global.FvLogic.low,false);
         input_wires = new Integer[1];
         output_wires = null;
         output_wires = new Integer[1];

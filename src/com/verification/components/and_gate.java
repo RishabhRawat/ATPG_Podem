@@ -9,7 +9,7 @@ import static com.verification.global.FvLogic.and;
 
 public final class and_gate extends component {
     public and_gate(Integer myID, ArrayList<Integer> inputIDs, ArrayList<Integer> outputIDs) {
-        super(myID,2,1,global.FvLogic.high,global.FvLogic.low,false);
+        super(myID,2,1,global.FvLogic.high,global.FvLogic.low, global.FvLogic.high,false);
         input_wires = new Integer[2];
         output_wires = new Integer[1];
         input_wires = inputIDs.toArray(input_wires);

@@ -2,14 +2,12 @@ package com.verification.BranchnBound;
 
 import com.verification.InvalidOperationException;
 import com.verification.components.PI;
+import com.verification.components.PO;
 import com.verification.components.component;
 import com.verification.global;
 import com.verification.wire;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.Stack;
+import java.util.*;
 
 /**
  * The Branch and Bound tree implemented as a stack
@@ -21,13 +19,14 @@ public class BnBStack extends Stack<BnBNode> {
      * @param inputValue the value being assigned
      * @return the inserted node
      */
-    private wire faultSite = null;
+    private Integer faultSite = null;
 
-    private BnBNode insertNode(PI input, boolean flag, global.FvLogic inputValue){
+    private void insertNode(PI input, boolean flag, global.FvLogic inputValue){
         BnBNode node = new BnBNode(input,inputValue);
+        input.assignment_node = node;
+        input.assignment = inputValue;
         push(node);
-        //TODO: Implement Implication
-        return node;
+        if(!imply(input)) swap();
     }
 
     private Comparator<wire> cc0_comparator = new Comparator<wire>() {
@@ -42,6 +41,28 @@ public class BnBStack extends Stack<BnBNode> {
             return o1.cc0-o2.cc0;
         }
     };
+
+    private boolean imply(PI changedPI){
+        HashMap<Integer,String> result = changedPI.check_and_imply(faultSite);
+        for (Integer wireID:result.keySet()) {
+            boolean breakfor = false;
+            switch (result.get(wireID)){
+                case "ImplicationConflict":
+                    return false;
+                case "FaultActivation":
+                    breakfor = true;
+                    break;
+                case "ImplicationMatch":
+                    breakfor = true;
+                    break;
+                case "ImplicationSuccess":
+                    global.all_components.get(global.all_nets.get(wireID).outputgate_id).check_and_imply(faultSite);
+                    break;
+            }
+            if (breakfor) break;
+        }
+        return true;
+    }
 
 
     private void swap(){
@@ -78,12 +99,91 @@ public class BnBStack extends Stack<BnBNode> {
         insertNode((PI)associated_gate,false,associated_value);
     }
 
-    public BnBStack(wire faultSite) {
+    public BnBStack(Integer faultSite) throws InvalidOperationException {
         this.faultSite = faultSite;
     }
 
-    public void execute() {
-        Integer a = global.all_components.get(faultSite.outputgate_id).x_path_check();
-        System.out.println(a);
+    private void solveNextObjective(Stack<Integer> xpath) throws InvalidOperationException {
+        Integer objectiveID = -1;
+        global.FvLogic objectiveValue;
+        if (((global.all_nets.get(faultSite).assignment == global.FvLogic.D)&&
+                (global.all_components.get(global.all_nets.get(faultSite).inputgate_id).calculate() == global.FvLogic.high))||
+                ((global.all_nets.get(faultSite).assignment == global.FvLogic.D_bar) &&
+                (global.all_components.get(global.all_nets.get(faultSite).inputgate_id).calculate() == global.FvLogic.low))){
+                //TODO: Add objective check
+                component gate = global.all_components.get(Jfrontier(xpath));
+                objectiveValue = gate.non_controlling_value;
+            for (Integer input_wire : gate.input_wires) {
+                if(global.all_nets.get(input_wire).assignment== global.FvLogic.X){
+                    objectiveID = input_wire;
+                    break;
+                }
+                throw new InvalidOperationException();
+            }
+            }
+            else {
+                objectiveID = faultSite;
+                objectiveValue = global.FvLogic.high;
+            }
+        backTrace(objectiveID,objectiveValue);
+    }
+
+    //Checks the xpath for J frontier gate
+    private Integer Jfrontier(Stack<Integer> xpath) throws InvalidOperationException {
+        Integer xGate;
+        do {
+            xGate = xpath.pop();
+            boolean afterX = false, beforeD = false;
+            Integer[] outWires = global.all_components.get(xGate).output_wires;
+            Integer[] inWires = global.all_components.get(xGate).input_wires;
+            for (Integer outWire : outWires) {
+                afterX|=(global.all_nets.get(outWire).assignment == global.FvLogic.X);
+            }
+            for (Integer inWire : inWires) {
+                beforeD|=(global.all_nets.get(inWire).assignment == global.FvLogic.D || global.all_nets.get(inWire).assignment == global.FvLogic.D_bar);
+            }
+            if(beforeD && afterX)
+                return xGate;
+        }while ( !xGate.equals(global.all_nets.get(faultSite).outputgate_id));
+        throw new InvalidOperationException();
+    }
+
+    private boolean faultTested(){
+        //Test to check fault activated
+        if ((global.all_nets.get(faultSite).assignment == global.FvLogic.D &&
+                global.all_components.get(global.all_nets.get(faultSite).inputgate_id).calculate() == global.FvLogic.high)
+                || (global.all_nets.get(faultSite).assignment == global.FvLogic.D_bar &&
+                global.all_components.get(global.all_nets.get(faultSite).inputgate_id).calculate() == global.FvLogic.low)){
+
+            //Check id fault Propogated
+            for (component value : global.all_components.values()) {
+                if(value instanceof PO){
+                    if(((PO)value).assignment == global.FvLogic.D || ((PO)value).assignment == global.FvLogic.D_bar)
+                        return true;
+                }
+            }
+        }
+        return false;
+
+    }
+
+
+    public void execute() throws InvalidOperationException {
+        try {
+            do{
+                Stack<Integer> xpath = global.all_components.get(global.all_nets.get(faultSite).outputgate_id).x_path_check(null);
+                if (xpath != null) {
+                    solveNextObjective(xpath);
+                } else
+                    swap();
+                if(faultTested())
+                    System.out.println("aysuafbiwdlhhhhhhhhhb");
+            }while (!faultTested());
+        }
+        catch (EmptyStackException e){
+            e.printStackTrace();
+        }
+
+
     }
 }

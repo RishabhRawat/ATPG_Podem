@@ -7,7 +7,7 @@ import java.util.ArrayList;
 
 public class fanout_gate extends component {
     public fanout_gate(Integer myID, ArrayList<Integer> inputIDs, ArrayList<Integer> outputIDs){
-        super(myID,0,outputIDs.size(),global.FvLogic.high,global.FvLogic.high,false);
+        super(myID,0,outputIDs.size(),global.FvLogic.high,global.FvLogic.low,global.FvLogic.high,false);
         input_wires = new Integer[1];
         output_wires = new Integer[outputs];
         input_wires = inputIDs.toArray(input_wires);

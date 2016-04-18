@@ -108,24 +108,24 @@ public final class global {
 
     public static HashMap<Integer, wire> all_nets = new HashMap<>();
     public static HashMap<Integer, component> all_components = new HashMap<>();
-    static HashMap<wire,String> Allsa0faults = new HashMap<>();
-    static HashMap<wire,String> Allsa1faults = new HashMap<>();
+    static HashMap<Integer,String> Allsa0faults = new HashMap<>();
+    static HashMap<Integer,String> Allsa1faults = new HashMap<>();
 
     private static boolean check_controllability_completion() {
         return (cc_complete_count > 0) && (cc_complete_count == total_output);
     }
 
     //D is for sa0 fault,
-    static wire getNextFault(){
-        for(wire aFaultSite: Allsa0faults.keySet()) {
+    static Integer getNextFault(){
+        for(Integer aFaultSite: Allsa0faults.keySet()) {
             if(Allsa0faults.get(aFaultSite)=="") {
-                aFaultSite.assignment= global.FvLogic.D;
+                all_nets.get(aFaultSite).assignment= global.FvLogic.D;
                 return aFaultSite;
             }
         }
-        for(wire aFaultSite: Allsa1faults.keySet()) {
+        for(Integer aFaultSite: Allsa1faults.keySet()) {
             if(Allsa0faults.get(aFaultSite)==""){
-                aFaultSite.assignment = global.FvLogic.D_bar;
+                all_nets.get(aFaultSite).assignment = global.FvLogic.D_bar;
                 return aFaultSite;
             }
         }
@@ -136,7 +136,7 @@ public final class global {
     public static final wire highWire = new wire(0);
     public static final wire lowWire = new wire(0);
 
-    public static void execute(String content) throws ScriptException, NoSuchMethodException {
+    public static void execute(String content) throws ScriptException, NoSuchMethodException, InvalidOperationException {
 
         //Initialising rail wires.. Powering up circuit :P
         {
@@ -218,14 +218,14 @@ public final class global {
         //Initialising fault list
         all_nets.forEach((key,value)->{
             if(key != 1 && key!= 0){
-                Allsa0faults.put(value,"");
-                Allsa1faults.put(value,"");
+                Allsa0faults.put(key,"");
+                Allsa1faults.put(key,"");
             }
         });
 
 
         //Algorithm start
-        wire faultSite = getNextFault();
+        Integer faultSite = getNextFault();
         while(faultSite != null){
             BnBStack podemStack = new BnBStack(faultSite);
             podemStack.execute();
