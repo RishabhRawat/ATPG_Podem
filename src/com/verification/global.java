@@ -120,12 +120,13 @@ public final class global {
         for(Integer aFaultSite: Allsa0faults.keySet()) {
             if(Allsa0faults.get(aFaultSite)=="") {
                 all_nets.get(aFaultSite).assignment= global.FvLogic.D;
+                all_nets.get(aFaultSite).assignment_node= rootNode;
                 return aFaultSite;
             }
         }
         for(Integer aFaultSite: Allsa1faults.keySet()) {
             if(Allsa0faults.get(aFaultSite)==""){
-                all_nets.get(aFaultSite).assignment = global.FvLogic.D_bar;
+                all_nets.get(aFaultSite).assignment_node = rootNode;
                 return aFaultSite;
             }
         }
@@ -223,12 +224,12 @@ public final class global {
             }
         });
 
-
-        //Algorithm start
         Integer faultSite = getNextFault();
-        while(faultSite != null){
+        //Algorithm start
+        do {
             BnBStack podemStack = new BnBStack(faultSite);
             podemStack.execute();
-        }
+            faultSite = getNextFault();
+        }while (faultSite != null);
     }
 }

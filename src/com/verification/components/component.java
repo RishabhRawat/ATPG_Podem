@@ -57,7 +57,7 @@ public abstract class component {
                 }
             }
             else {
-                if (output_wire.assignment != output_value && output_wire.assignment_node.isActive()) {
+                if (output_wire.assignment != output_value && output_wire.assignment_node != null && output_wire.assignment_node.isActive()) {
                     result.put(i, "ImplicationConflict");
                 } else if (output_wire.assignment != output_value) {
                     output_wire.assignment_node = newestNode;
@@ -98,8 +98,10 @@ public abstract class component {
         return null;
     }
 
-    public HashMap<Integer,String> check_and_imply(Integer faultWire) {
+    // returns true if success
+    public boolean check_and_imply(Integer faultWire) {
         ArrayList<BnBNode> inputNodes = new ArrayList<>();
+        HashMap<Integer,String> implication_result;
 
         if(input_wires != null) {
             for (Integer i : input_wires) {
@@ -117,9 +119,28 @@ public abstract class component {
             }
         };
         if(this instanceof PI)
-            return imply(((PI)this).assignment_node,faultWire);
+            implication_result =  imply(((PI)this).assignment_node,faultWire);
         else
-            return imply(Collections.max(inputNodes, cmp),faultWire);
+            implication_result =  imply(Collections.max(inputNodes, cmp),faultWire);
+
+        for (Integer wireID:implication_result.keySet()) {
+            boolean breakfor = false;
+            switch (implication_result.get(wireID)){
+                case "ImplicationConflict":
+                    return false;
+                case "FaultActivation":
+//                    breakfor = true;
+                    break;
+                case "ImplicationMatch":
+//                    breakfor = true;
+                    break;
+                case "ImplicationSuccess":
+                    global.all_components.get(global.all_nets.get(wireID).outputgate_id).check_and_imply(faultWire);
+                    break;
+            }
+            if (breakfor) break;
+        }
+        return true;
     }
 
     public void check_and_propogate_controllability() {

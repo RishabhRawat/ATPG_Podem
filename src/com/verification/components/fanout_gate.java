@@ -30,6 +30,6 @@ public class fanout_gate extends component {
      */
     @Override
     public global.FvLogic calculate() {
-        return (global.all_nets.get(output_wires[input_wires[0]])).assignment;
+        return (global.all_nets.get(input_wires[0])).assignment;
     }
 }

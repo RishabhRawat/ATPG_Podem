@@ -26,10 +26,10 @@ public class BnBStack extends Stack<BnBNode> {
         input.assignment_node = node;
         input.assignment = inputValue;
         push(node);
-        if(!imply(input)) swap();
+        if(!(input.check_and_imply(faultSite))) swap();
     }
 
-    private Comparator<wire> cc0_comparator = new Comparator<wire>() {
+     private Comparator<wire> cc0_comparator = new Comparator<wire>() {
         @Override
         public int compare(wire o1, wire o2) {
             return o1.cc0-o2.cc0;
@@ -41,29 +41,6 @@ public class BnBStack extends Stack<BnBNode> {
             return o1.cc0-o2.cc0;
         }
     };
-
-    private boolean imply(PI changedPI){
-        HashMap<Integer,String> result = changedPI.check_and_imply(faultSite);
-        for (Integer wireID:result.keySet()) {
-            boolean breakfor = false;
-            switch (result.get(wireID)){
-                case "ImplicationConflict":
-                    return false;
-                case "FaultActivation":
-                    breakfor = true;
-                    break;
-                case "ImplicationMatch":
-                    breakfor = true;
-                    break;
-                case "ImplicationSuccess":
-                    global.all_components.get(global.all_nets.get(wireID).outputgate_id).check_and_imply(faultSite);
-                    break;
-            }
-            if (breakfor) break;
-        }
-        return true;
-    }
-
 
     private void swap(){
         BnBNode topNode = pop();
