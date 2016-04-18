@@ -137,6 +137,15 @@ public final class global {
     public static final wire highWire = new wire(0);
     public static final wire lowWire = new wire(0);
 
+    public static void resetWires(){
+        all_nets.forEach((wireID,wire)->{
+            if(wireID > 1) {
+                wire.assignment_node = null;
+                wire.assignment = FvLogic.X;
+            }
+        });
+    }
+
     public static void execute(String content) throws ScriptException, NoSuchMethodException, InvalidOperationException {
 
         //Initialising rail wires.. Powering up circuit :P
@@ -229,6 +238,17 @@ public final class global {
         do {
             BnBStack podemStack = new BnBStack(faultSite);
             podemStack.execute();
+            String solution = "";
+            for (component inputComponent:all_components.values()) {
+                if (inputComponent instanceof PI){
+                    solution += inputComponent.hashID + ": "+((PI) inputComponent).assignment+", ";
+                }
+            }
+            if (all_nets.get(faultSite).assignment == FvLogic.D)
+                Allsa0faults.put(faultSite,solution);
+            else
+                Allsa1faults.remove(faultSite,solution);
+            resetWires();
             faultSite = getNextFault();
         }while (faultSite != null);
     }

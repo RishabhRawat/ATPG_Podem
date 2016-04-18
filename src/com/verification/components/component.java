@@ -57,7 +57,7 @@ public abstract class component {
                 }
             }
             else {
-                if (output_wire.assignment != output_value && output_wire.assignment_node != null && output_wire.assignment_node.isActive()) {
+                if (output_wire.assignment != output_value && output_wire.assignment_node != null && !output_wire.assignment_node.equals(global.rootNode) && output_wire.assignment_node.isActive()) {
                     result.put(i, "ImplicationConflict");
                 } else if (output_wire.assignment != output_value) {
                     output_wire.assignment_node = newestNode;

@@ -160,7 +160,5 @@ public class BnBStack extends Stack<BnBNode> {
         catch (EmptyStackException e){
             e.printStackTrace();
         }
-
-
     }
 }
