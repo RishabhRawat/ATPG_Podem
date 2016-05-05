@@ -162,8 +162,6 @@ public class BnBStack extends Stack<BnBNode> {
                     solveNextObjective(xpath);
                 } else
                     swap();
-                if(faultTested())
-                    System.out.println("aysuafbiwdlhhhhhhhhhb");
             }while (!faultTested());
         }
         catch (EmptyStackException e){

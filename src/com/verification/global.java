@@ -240,10 +240,14 @@ public final class global {
                     solution += inputComponent.hashID + ": "+((PI) inputComponent).assignment+", ";
                 }
             }
-            if (all_nets.get(faultSite).assignment == FvLogic.D)
-                Allsa0faults.put(faultSite,solution);
-            else
-                Allsa1faults.put(faultSite,solution);
+            if (all_nets.get(faultSite).assignment == FvLogic.D) {
+                Allsa0faults.put(faultSite, solution);
+                System.out.println("Stuck at 0: net "+faultSite+" Test pattern- "+solution);
+            }
+            else {
+                Allsa1faults.put(faultSite, solution);
+                System.out.println("Stuck at 0: net "+faultSite+" Test pattern- "+solution);
+            }
             resetWires();
             faultSite = getNextFault();
         }while (faultSite != null);
