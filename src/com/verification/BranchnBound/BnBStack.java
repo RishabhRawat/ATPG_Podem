@@ -90,18 +90,26 @@ public class BnBStack extends Stack<BnBNode> {
                 //TODO: Add objective check
                 component gate = global.all_components.get(Jfrontier(xpath));
                 objectiveValue = gate.non_controlling_value;
-            for (Integer input_wire : gate.input_wires) {
-                if(global.all_nets.get(input_wire).assignment== global.FvLogic.X){
-                    objectiveID = input_wire;
-                    break;
+                boolean foundUnassignedWire = false;
+                for (Integer input_wire : gate.input_wires) {
+                    if(global.all_nets.get(input_wire).assignment== global.FvLogic.X){
+                        objectiveID = input_wire;
+                        foundUnassignedWire = true;
+                        break;
+                    }
                 }
-                throw new InvalidOperationException();
-            }
+                if (!foundUnassignedWire) throw new InvalidOperationException();
             }
             else {
                 objectiveID = faultSite;
-                objectiveValue = global.FvLogic.high;
+                if (global.all_nets.get(faultSite).assignment== global.FvLogic.D)
+                    objectiveValue = global.FvLogic.high;
+                else if (global.all_nets.get(faultSite).assignment== global.FvLogic.D_bar)
+                    objectiveValue = global.FvLogic.low;
+                else
+                    throw new InvalidOperationException();
             }
+
         backTrace(objectiveID,objectiveValue);
     }
 
@@ -146,6 +154,7 @@ public class BnBStack extends Stack<BnBNode> {
 
 
     public void execute() throws InvalidOperationException {
+        global.all_components.get(global.all_nets.get(faultSite).outputgate_id).check_and_imply(faultSite);
         try {
             do{
                 Stack<Integer> xpath = global.all_components.get(global.all_nets.get(faultSite).outputgate_id).x_path_check(null);

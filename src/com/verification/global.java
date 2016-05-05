@@ -64,45 +64,34 @@ public final class global {
         }
 
         public static FvLogic and(FvLogic a, FvLogic b) {
-            if (a == b)
+            if(a==low || b == low)
+                return low;
+            else if(a == X || b == X)
+                return X;
+            else if(a==b || b==high)
                 return a;
-            switch (a) {
-                case low:
-                    return low;
-                case high:
-                    return b;
-                case X:
-                    return X;
-                case D:
-                    if (b == D_bar)
-                        return low;
-                    else
-                        return and(b, a);
-                default:
-                    throw new IllegalArgumentException();
-            }
+            else if(a==high)
+                return b;
+            else if((a==D && b==D_bar)||(a==D_bar && b==D))
+                return low;
+            else
+                throw new IllegalArgumentException();
 
         }
 
         public static FvLogic or(FvLogic a, FvLogic b) {
-            if (a == b)
+            if(a==high || b == high)
+                return high;
+            else if(a == X || b == X)
+                return X;
+            else if(a==b || b==low)
                 return a;
-            switch (a) {
-                case low:
-                    return b;
-                case high:
-                    return high;
-                case X:
-                    return X;
-                case D:
-                    if (b == D_bar)
-                        return high;
-                    else
-                        return and(b, a);
-                default:
-                    throw new IllegalArgumentException();
-            }
-
+            else if(a==low)
+                return b;
+            else if((a==D && b==D_bar)||(a==D_bar && b==D))
+                return high;
+            else
+                throw new IllegalArgumentException();
         }
     }
 
@@ -119,13 +108,14 @@ public final class global {
     static Integer getNextFault(){
         for(Integer aFaultSite: Allsa0faults.keySet()) {
             if(Allsa0faults.get(aFaultSite)=="") {
-                all_nets.get(aFaultSite).assignment= global.FvLogic.D;
+                all_nets.get(aFaultSite).assignment= FvLogic.D;
                 all_nets.get(aFaultSite).assignment_node= rootNode;
                 return aFaultSite;
             }
         }
         for(Integer aFaultSite: Allsa1faults.keySet()) {
-            if(Allsa0faults.get(aFaultSite)==""){
+            if(Allsa1faults.get(aFaultSite)==""){
+                all_nets.get(aFaultSite).assignment= FvLogic.D_bar;
                 all_nets.get(aFaultSite).assignment_node = rootNode;
                 return aFaultSite;
             }
@@ -144,6 +134,12 @@ public final class global {
                 wire.assignment = FvLogic.X;
             }
         });
+        for (component inputComponent:all_components.values()) {
+            if (inputComponent instanceof PI){
+                ((PI)inputComponent).assignment = FvLogic.X;
+                ((PI)inputComponent).assignment_node = null;
+            }
+        }
     }
 
     public static void execute(String content) throws ScriptException, NoSuchMethodException, InvalidOperationException {
@@ -247,7 +243,7 @@ public final class global {
             if (all_nets.get(faultSite).assignment == FvLogic.D)
                 Allsa0faults.put(faultSite,solution);
             else
-                Allsa1faults.remove(faultSite,solution);
+                Allsa1faults.put(faultSite,solution);
             resetWires();
             faultSite = getNextFault();
         }while (faultSite != null);
