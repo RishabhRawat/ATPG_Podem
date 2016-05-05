@@ -9,10 +9,13 @@ import com.verification.wire;
 
 import java.util.*;
 
+
 /**
  * The Branch and Bound tree implemented as a stack
  */
 public class BnBStack extends Stack<BnBNode> {
+
+    public boolean untestableFault = false;
     /**
      * Inserts a new node to the stack corrosponding to a assignment at input
      * @param input the PI being assigned
@@ -44,6 +47,7 @@ public class BnBStack extends Stack<BnBNode> {
 
     private void swap(){
         BnBNode topNode = pop();
+
         if(topNode.flag){
             topNode.active = false;
             swap();
@@ -165,7 +169,9 @@ public class BnBStack extends Stack<BnBNode> {
             }while (!faultTested());
         }
         catch (EmptyStackException e){
-            e.printStackTrace();
+            //e.printStackTrace();
+            System.out.println("untestable");
+            untestableFault = true;
         }
     }
 }

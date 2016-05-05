@@ -231,7 +231,10 @@ public final class global {
 
         Integer faultSite = getNextFault();
         //Algorithm start
+        int totalFault = 0;
+        int untestableFault = 0;
         do {
+            totalFault++;
             BnBStack podemStack = new BnBStack(faultSite);
             podemStack.execute();
             String solution = "";
@@ -241,15 +244,26 @@ public final class global {
                 }
             }
             if (all_nets.get(faultSite).assignment == FvLogic.D) {
+                if(podemStack.untestableFault) {
+                    solution = "Untestable";
+                    untestableFault++;
+                }
                 Allsa0faults.put(faultSite, solution);
                 System.out.println("Stuck at 0: net "+faultSite+" Test pattern- "+solution);
             }
             else {
+                if(podemStack.untestableFault) {
+                    solution = "Untestable";
+                    untestableFault++;
+                }
                 Allsa1faults.put(faultSite, solution);
-                System.out.println("Stuck at 0: net "+faultSite+" Test pattern- "+solution);
+                System.out.println("Stuck at 1: net "+faultSite+" Test pattern- "+solution);
             }
             resetWires();
             faultSite = getNextFault();
         }while (faultSite != null);
+        System.out.println("Total Number of faults: "+totalFault);
+        System.out.println("Untestable faults: "+untestableFault);
+        System.out.println("Fault Coverage: "+(1-(float)untestableFault/(float)totalFault));
     }
 }
